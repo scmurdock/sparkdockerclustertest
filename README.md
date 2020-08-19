@@ -1,16 +1,14 @@
-Submitting a spark application to a cluster using Docker:
+# Submitting a spark application to a cluster using Docker (to get Docker See: https://docs.docker.com/get-docker/)
 
-To Install Docker See: https://docs.docker.com/get-docker/
-
-Clone this repository to your computer using this command:
+## Clone this repository to your computer using this command:
 
 $ git clone https://github.com/scmurdock/sparkdockerclustertest.git
 
-Change directories to the cloned repository:
+## Change directories to the cloned repository:
 
 $ cd sparkdockerclustertest
 
-Start the Spark master and worker containers:
+## Start the Spark master and worker containers:
 
 $ docker-compose up
 
@@ -23,11 +21,11 @@ spark-worker-1_1  | 20/08/19 17:21:09 INFO Worker: Successfully registered with 
 
 You now have spark containers running (master, and two workers). 
 
-Open another terminal then shell into the master node:
+## Open another terminal then shell into the master node:
 
 $ docker exec -it sparkdockerclustertest_spark_1 /bin/sh
 
-Next submit the sparkpytest.py script to the master node:
+## Next submit the sparkpytest.py script to the master node:
 
 $ $SPARK_HOME/bin/spark-submit --master spark://spark:7077 /home/workspace/sparkdockerclustertest/sparkpytest.py
 
@@ -49,6 +47,6 @@ This means the application finished running, and has produced the desired output
 
 
 
-Submitting a Spark application to the Spark cluster using the project workspace:
+## Having a hard time getting things working? Try using the project workspace instructions (less setup):
 
 https://github.com/scmurdock/sparkpyclustertest.git
