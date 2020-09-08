@@ -13,6 +13,10 @@ services:
       - '8080:8080'
     volumes:
       - ./:/home/workspace/sparkdockerclustertest
+      - /tmp:/tmp
+      - /tmp/jars:/opt/bitnami/spark/.ivy2
+    network_mode: bridge
+
   spark-worker-1:
     image: docker.io/bitnami/spark:3-debian-10
     environment:
@@ -26,6 +30,10 @@ services:
       - SPARK_SSL_ENABLED=no
     volumes:
       - ./:/home/workspace/sparkdockerclustertest
+      - /tmp:/tmp
+      - /tmp/jars:/opt/bitnami/spark/.ivy2      
+    network_mode: bridge
+
   spark-worker-2:
     image: docker.io/bitnami/spark:3-debian-10
     environment:
@@ -39,3 +47,6 @@ services:
       - SPARK_SSL_ENABLED=no
     volumes:
       - ./:/home/workspace/sparkdockerclustertest
+      - /tmp:/tmp
+      - /tmp/jars:/opt/bitnami/spark/.ivy2  
+    network_mode: bridge

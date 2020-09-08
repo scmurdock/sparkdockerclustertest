@@ -21,7 +21,7 @@ spark-worker-1_1  | 20/08/19 17:21:09 INFO Worker: Successfully registered with 
 
 You now have spark containers running (master, and two workers). 
 
-## Open another terminal then shell into the master node:
+## Open another terminal shell into the master node:
 
 $ docker exec -it sparkdockerclustertest_spark_1 /bin/sh
 

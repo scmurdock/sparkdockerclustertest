@@ -1,0 +1,4 @@
+# to scan the logs
+$SPARK_HOME/bin/spark-submit /home/workspace/sparkdockerclustertest/sparkpylogstream.py
+# to run the kafka subscription
+$SPARK_HOME/bin/spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.0 /home/workspace/sparkdockerclustertest/sparkpykafkastream.py
