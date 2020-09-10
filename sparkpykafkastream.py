@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, col
+from pyspark.sql.functions import from_json, col, unbase64
 from pyspark.sql.types import StructField, StructType, StringType, BooleanType, ArrayType
 
 # this is a manually created schema - before Spark 3.0.0, schema inference is not automatic
@@ -36,7 +36,7 @@ kafkaRawStreamingDF = spark                          \
 # this is necessary for Kafka Data Frame to be readable, into a single column  value
 kafkaStreamingDF = kafkaRawStreamingDF.selectExpr("CAST(value AS STRING)")
 
-# this splits the single column "value" with a json object in it, like this:
+# from_json splits the single column "value" with a json object in it, like this:
 # +------------+
 # | value      |
 # +------------+
@@ -49,9 +49,17 @@ kafkaStreamingDF = kafkaRawStreamingDF.selectExpr("CAST(value AS STRING)")
 # +------------+-----+-----------+------------+---------+-----+-----+-----------------+
 # |U29ydGVkU2V0| null|       null|        null|     NONE|false|false|[[dGVzdDI=, 0.0]]|
 # +------------+-----+-----------+------------+---------+-----+-----+-----------------+
+#
+# storing them in a temporary view called RedisSortedSet
 structuredTopicFieldStreamingDF=kafkaStreamingDF\
     .withColumn("value", from_json("value", schema))\
     .select(col('value.*'))\
+    .createOrReplaceTempView("RedisSortedSet")
+
+# this takes the element field from the 0th element in the array of structs and creates a column called encodedCustomer
+zSetEncodedEntriesStreamingDF = spark.sql("select zSetEntries[0].element as encodedCustomer from RedisSortedSet") 
+
+zSetDecodedEntriesStreamingDF = zSetEncodedEntriesStreamingDF.withColumn("decodedCustomer", unbase64(zSetEncodedEntriesStreamingDF.encodedCustomer))
 
 # this takes the stream and "materializes" or "executes" the flow of data and "sinks" it to the console
-structuredTopicFieldStreamingDF.writeStream.outputMode("append").format("console").start().awaitTermination()
+zSetDecodedEntriesStreamingDF.writeStream.outputMode("append").format("console").start().awaitTermination()

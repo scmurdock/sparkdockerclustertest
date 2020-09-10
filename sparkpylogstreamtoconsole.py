@@ -15,7 +15,8 @@ spark = SparkSession.builder.appName("stedi-logging").getOrCreate()
 logDataStreamingdf = spark.readStream.text(logFolder)
 
 # this transformation (once the pipeline starts) will capture values containing this string, see example below:
-# INFO: Risk for customer: sal.khan@test.com {"customer":"sal.khan@test.com","score":-0.98,"riskDate":"2020-09-02T06:00:30.336Z"}
+# INFO: DeviceRouter received payload: {"customer":"Bobby.Anandh@test.com","score":-3.0,"riskDate":"2020-09-09T17:05:34.350Z"} with timestamp: 1599692736490
+
 riskScoreStreamingdf = logDataStreamingdf.filter(logDataStreamingdf.value.contains('DeviceRouter received payload'))
 
 # we are doing a "select" statement on the log entries with the json we want, and getting the json by asking for characters to the right of the {
