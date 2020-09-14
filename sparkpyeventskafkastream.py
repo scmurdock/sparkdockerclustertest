@@ -15,6 +15,8 @@ customerRiskJSONSchema = StructType (
 
 # the source for this data pipeline is a kafka topic, defined below
 spark = SparkSession.builder.appName("stedi-events").getOrCreate()
+spark.sparkContext.setLogLevel('WARN')
+
 kafkaRawStreamingDF = spark                          \
     .readStream                                          \
     .format("kafka")                                     \
@@ -51,6 +53,11 @@ kafkaStreamingDF\
 customerRiskStreamingDF = spark.sql("select customer, score from CustomerRisk") 
 
 
-# this takes the stream and "materializes" or "executes" the flow of data and "sinks" it to the console
+# this takes the stream and "materializes" or "executes" the flow of data and "sinks" it to the console as it is updated one at a time like this:
+# +--------------------+-----+
+# |            customer|score|
+# +--------------------+-----+
+# |Spencer.Davis@tes...|  8.0|
+# +--------------------+-----+
 customerRiskStreamingDF.writeStream.outputMode("append").format("console").start().awaitTermination()
 

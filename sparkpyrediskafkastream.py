@@ -31,6 +31,8 @@ customerJSONSchema = StructType (
 
 # the source for this data pipeline is a kafka topic, defined below
 spark = SparkSession.builder.appName("stedi-kafka").getOrCreate()
+spark.sparkContext.setLogLevel('WARN')
+
 kafkaRawStreamingDF = spark                          \
     .readStream                                          \
     .format("kafka")                                     \

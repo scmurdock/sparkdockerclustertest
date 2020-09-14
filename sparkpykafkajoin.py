@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, col, unbase64, base64, split, lit, concat
-from pyspark.sql.types import StructField, StructType, StringType, BooleanType, ArrayType, IntegerType, DateType
+from pyspark.sql.functions import from_json, col, unbase64, base64, split
+from pyspark.sql.types import StructField, StructType, StringType, BooleanType, ArrayType
 
 # this is a manually created schema - before Spark 3.0.0, schema inference is not automatic
 kafkaMessageSchema = StructType(
@@ -29,17 +29,8 @@ customerJSONSchema = StructType (
     ]
 )
 
-# {"customer":"Bobby.Anandh@test.com","score":-3.0,"riskDate":"2020-09-09T17:05:34.350Z"} with timestamp: 1599692736490
-
-customerRiskJSONSchema = StructType (
-    [
-        StructField("customer", StringType()),
-        StructField("score", StringType()),
-        StructField("riskDate",DateType())
-    ]
-)
 # the source for this data pipeline is a kafka topic, defined below
-spark = SparkSession.builder.appName("kafka-join-log").getOrCreate()
+spark = SparkSession.builder.appName("stedi-kafka").getOrCreate()
 kafkaRawStreamingDF = spark                          \
     .readStream                                          \
     .format("kafka")                                     \
@@ -102,36 +93,5 @@ emailAndBirthYearStreamingDF = emailAndBirthDayStreamingDF.select('email',split(
 
 # this takes the stream and "materializes" or "executes" the flow of data and "sinks" it to the console
 emailAndBirthYearStreamingDF.writeStream.outputMode("append").format("console").start().awaitTermination()
-
-logFolder = "/tmp/logs"  # Should be some file on your system
-
-#logDataStreamingDF is a Streaming DataFrame - an unbounded table containing the streaming log data. One column of strings named "value". 
-# Each log entry is a row in the "table" with the log folder as its source
-# This streaming Dataframe isn't receiving data yet, because we haven't started it yet
-logDataStreamingDF = spark.readStream.text(logFolder)
-
-# this transformation (once the pipeline starts) will capture values containing this string, see example below:
-# INFO: DeviceRouter received payload: {"customer":"Bobby.Anandh@test.com","score":-3.0,"riskDate":"2020-09-09T17:05:34.350Z"} with timestamp: 1599692736490
-
-riskScoreStreamingDF = logDataStreamingDF.filter(logDataStreamingDF.value.contains('DeviceRouter received payload'))
-
-# we are doing a "select" statement on the log entries with the json we want, and getting the json by asking for characters to the right of the {
-# so we would get something that looks like this "customer":"sal.khan@test.com","score":-0.98,"riskDate":"2020-09-02T06:00:30.336Z"}
-# what's missing? the leading {    
-partialJsonStreamingDF = riskScoreStreamingDF.select(split(riskScoreStreamingDF.value,"\{").getItem(1).alias("json"))
-
-# so we add that back in at the start to make the json complete
-completeJsonStreamingDF=partialJsonStreamingDF.select(concat(lit("{"),partialJsonStreamingDF.json))
-
-# parse the json string column into nested columns containing each field based on the schema provided, then save it as a temp view
-completeJsonStreamingDF.withColumn("json", from_json("json", customerRiskJSONSchema)).select("json.*").createOrReplaceTempView("CustomerRisk")
-
-# save the fields from the temporary view in a dataframe
-riskScoreStreamingDF = spark.sql("select json.customer as customer, json.score as score, json.riskDate as riskDate from CustomerRisk")
-
-# every transformation in the pipeline so far has a Streaming DataFrame as an input, and a Streaming DataFrame as an output
-# this is different, as we want to sink to something outside, in this case the console
-# so we are taking jsonFixed (a Streaming DataFrame) and getting a DataStreamWriter, in **Append** mode, to write to the Console
-riskScoreStreamingDF.writeStream.outputMode("append").format("console").start().awaitTermination()
 
 
