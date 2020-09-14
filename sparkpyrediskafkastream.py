@@ -93,7 +93,32 @@ emailAndBirthDayStreamingDF = spark.sql("select birthDay, email from CustomerRec
 
 emailAndBirthYearStreamingDF = emailAndBirthDayStreamingDF.select('email',split(emailAndBirthDayStreamingDF.birthDay,"-").getItem(0).alias("birthYear"))
 
-# this takes the stream and "materializes" or "executes" the flow of data and "sinks" it to the console
+
+# this takes the stream and "materializes" or "executes" the flow of data and "sinks" it to the console as it is updated one at a time like this:
+#+--------------------+---------+
+#|               email|birthYear|
+#+--------------------+---------+
+#|Gail.Spencer@test...|     1963|
+#|Craig.Lincoln@tes...|     1962|
+#|  Edward.Wu@test.com|     1961|
+#|Santosh.Phillips@...|     1960|
+#|Sarah.Lincoln@tes...|     1959|
+#|Sean.Howard@test.com|     1958|
+#|Sarah.Clark@test.com|     1957|
+#|Suresh.Clark@test...|     1956|
+#|  Lyn.Davis@test.com|     1955|
+#|  Trevor.Wu@test.com|     1954|
+#|Edward.Khatib@tes...|     1953|
+#|Bobby.Jackson@tes...|     1951|
+#|David.Gonzalez@te...|     1949|
+#|Danny.Smith@test.com|     1948|
+#|     Lyn.Wu@test.com|     1946|
+#|Travis.Jones@test...|     1945|
+#|Suresh.Olson@test...|     1944|
+#|Ashley.Mitra@test...|     1943|
+##|Angie.Aristotle@t...|     1940|
+#| John.Mitra@test.com|     1939|
+#+--------------------+---------+
 emailAndBirthYearStreamingDF.writeStream.outputMode("append").format("console").start().awaitTermination()
 
 #zSetDecodedEntriesStreamingDF\
